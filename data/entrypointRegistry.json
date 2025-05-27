@@ -1,0 +1,58 @@
+{
+  "v1": {
+    "transfer": [
+      "list(pair(address, list(pair(address, nat, nat))))"
+    ],
+    "balance_of": [
+      "list(pair(address, nat))",
+      "contract(list(pair(pair(address, nat), nat)))"
+    ],
+    "update_operators": [
+      "list(or(pair(address, pair(address, nat)), pair(address, pair(address, nat))))"
+    ],
+    "mint": [
+      "nat",
+      "map(string,bytes)",
+      "address"
+    ],
+    "burn": [
+      "nat",
+      "nat"
+    ]
+  },
+
+  "v2a": {
+    "$extends": "v1",
+    "add_parent": ["address"],
+    "remove_parent": ["address"],
+    "add_child": ["address"],
+    "remove_child": ["address"],
+    "lock_metadata": []
+  },
+  "v2b": { "$extends": "v2a" },
+  "v2c": { "$extends": "v2a" },
+  "v2d": { "$extends": "v2a" },
+  "v2e": { "$extends": "v2a" },
+
+  "v3": {
+    "$extends": "v2a",
+    "add_collaborator": ["address"],
+    "remove_collaborator": ["address"]
+  },
+
+  "v4": {
+    "$extends": "v3",
+    "append_artifact_uri": ["nat", "bytes"],
+    "append_extrauri": [
+      "string",
+      "string",
+      "string",
+      "nat",
+      "bytes"
+    ],
+    "clear_uri": ["nat", "string"],
+    "destroy": ["nat"],
+    "edit_contract_metadata": ["bytes"],
+    "edit_token_metadata": ["map(string,bytes)", "nat"]
+  }
+}

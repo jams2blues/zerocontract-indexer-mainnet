@@ -1,0 +1,115 @@
+//File: prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/*── enums ─────────────────────────────────────────────*/
+enum Network {
+  mainnet
+  ghostnet
+}
+
+enum ContractVersion {
+  v1
+  v2a
+  v2b
+  v2c
+  v2d
+  v2e
+  v3
+  v4
+  unknown
+}
+
+enum AddressRole {
+  collaborator
+  parent
+  child
+}
+
+/*── models ────────────────────────────────────────────*/
+model ZeroContract {
+  id        Int             @id @default(autoincrement())
+  kt1       String
+  network   Network
+  version   ContractVersion @default(unknown)
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  @@unique([network, kt1], name: "zero_network_kt1")       // explicit name for client use
+  @@map("zero_contracts")
+}
+
+model Collection {
+  id                       Int              @id @default(autoincrement())
+  kt1                      String
+  network                  Network
+  version                  ContractVersion  @default(unknown)
+  name                     String
+  symbol                   String
+  description              String
+  logo_uri                 String?
+  metadata                 Json?
+  tokenCount               Int              @default(0)
+  collaboratorCount        Int              @default(0)
+  metadata_bigmap_id       Int?
+  token_metadata_bigmap_id Int?
+  extrauri_counters_bigmap_id Int?
+  last_seen_lvl            Int              @default(0)
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+  createdAt                DateTime         @default(now()) @map("created_at")
+
+  tokens        Token[]        @relation("CollectionTokens")
+  collaborators Collaborator[] @relation("CollectionCollaborators")
+
+  @@unique([network, kt1], name: "network_kt1")             // ← referenced by indexer
+  @@map("collections")
+}
+
+model Token {
+  id             Int      @id @default(autoincrement())
+  collection_id  Int
+  token_id       Int
+  name           String
+  description    String
+  artifact_uri   String?
+  mime_type      String?
+  attributes     Json?
+  royalties      Int?
+  extra_metadata Json?
+  burned         Boolean  @default(false)
+  last_seen_lvl  Int      @default(0)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  collection Collection @relation("CollectionTokens", fields: [collection_id], references: [id], onDelete: Cascade)
+
+  @@unique([collection_id, token_id])
+  @@index([collection_id])
+  @@map("tokens")
+}
+
+model Collaborator {
+  id            Int         @id @default(autoincrement())
+  address       String
+  role          AddressRole @default(collaborator)
+  collection_id Int
+  collection    Collection  @relation("CollectionCollaborators", fields: [collection_id], references: [id], onDelete: Cascade)
+
+  @@unique([collection_id, role, address])
+  @@index([address])
+  @@map("collaborators")
+}
+
+model SyncCursor {
+  id        Int     @id @default(autoincrement())
+  network   Network @unique
+  level     Int
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("sync_cursor")
+}

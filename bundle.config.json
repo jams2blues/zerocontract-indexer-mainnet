@@ -1,0 +1,46 @@
+{
+  "outputDir": "summarized_files",
+
+  "bundles": [
+    {
+      "bundleName": "components-data-lib-bundle",
+      "patterns": [
+        "components/**/*",
+        "lib/**/*",
+        "data/**/*"
+      ]
+    },
+
+    {
+      "bundleName": "pages-scripts-styles-bundle",
+      "patterns": [
+        "pages/**/*",
+        "scripts/**/*",
+        "styles/**/*"
+      ]
+    },
+
+    {
+      "bundleName": "prisma-public-bundle",
+      "patterns": [
+        "prisma/**/*",
+        "public/**/*"
+      ]
+    },
+
+    {
+      "bundleName": "root-config-bundle",
+      "patterns": [
+        "next.config.js",
+        "vercel.json",
+        "bundle.config.json",
+        "package.json",
+        ".env.example",
+        ".editorconfig",
+        ".yarnrc.yml",
+        ".gitattributes",
+        ".gitignore"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "MAINNET_RPC": "@mainnet_rpc",
+    "GHOSTNET_RPC": "@ghostnet_rpc"
+  },
+  "functions": {
+    "api/indexer.js":   { "memory": 1024, "maxDuration": 60 },
+    "api/pruneGhostnet.js": { "memory": 512, "maxDuration": 30 }
+  },
+  "cron": [
+    {
+      "path": "/api/cron/indexer",  "schedule": "*/5 * * * *" },
+    { "path": "/api/indexer",       "schedule": "*/5 * * * *" },
+    { "path": "/api/pruneGhostnet", "schedule": "0 2 * * *" }
+  ]
+}

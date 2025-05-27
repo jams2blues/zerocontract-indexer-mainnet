@@ -1,0 +1,37 @@
+{
+  "name": "foc-table",
+  "version": "1.0.0",
+  "type": "module",
+  "packageManager": "yarn@4.9.1",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "bundle": "node scripts/generateBundles.js",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "prisma:generate": "prisma generate",
+    "postinstall": "yarn prisma:generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.8.2",
+    "@taquito/taquito": "^22.0.0",
+    "dotenv": "^16.5.0",
+    "fast-json-stable-stringify": "^2.1.0",
+    "fnv1a": "^1.1.1",
+    "murmurhash3js": "^3.0.1",
+    "next": "15.1.8",
+    "node-abort-controller": "^3.1.1",
+    "node-fetch": "^3.3.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "styled-components": "^6.1.18",
+    "swr": "^2.3.3",
+    "xxhashjs": "^0.2.2"
+  },
+  "devDependencies": {
+    "fast-glob": "^3.3.3",
+    "next-pwa": "^5.6.0",
+    "prisma": "^6.8.2"
+  }
+}
