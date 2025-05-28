@@ -1,12 +1,15 @@
-//File: pages/api/cron/indexer.js
+// pages/api/cron/indexer.js
 import runIndexer from '../../../scripts/indexer.js';
+import { TARGET } from '../../../config/NetworkDivergence.js';
 
-export default async function handler(_req, res) {
+export default async function handler(req, res) {
   try {
-    const summary = await runIndexer();
-    res.json(summary);
-  } catch (e) {
-    console.error('cron indexer error:', e);
-    res.status(500).json({ error: e.message });
+    console.log(`🔄 Triggering indexer for network: ${TARGET}`);
+    const result = await runIndexer();
+    // Return summary of indexing results for transparency
+    return res.status(200).json({ ok: true, result });
+  } catch (error) {
+    console.error('Indexer cron error:', error);
+    return res.status(500).json({ error: 'indexer_failed', message: error.message });
   }
 }

@@ -2696,9 +2696,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.149":
-  version: 1.5.158
-  resolution: "electron-to-chromium@npm:1.5.158"
-  checksum: 10c0/e6c435d495d3be523f81b5850956052f2e7ebc1a346444951b24fa974683c7d0b3e55fae854489d66d61ecf856f3f8d337a82835bb4b7b532ed25ada41e75070
+  version: 1.5.159
+  resolution: "electron-to-chromium@npm:1.5.159"
+  checksum: 10c0/dc5b60a235ad04b1637b3b2af4914ac900c42813b02262a91a41d950223316f7b12de715697cf9c2d9f572f716f9422bf259ee65d86599cd2cc66e92c499ebd1
   languageName: node
   linkType: hard
 
@@ -2998,13 +2998,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fnv1a@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "fnv1a@npm:1.1.1"
-  checksum: 10c0/4580e1a3dd022d54a1f7e7f536b5053c37cf577f63d893078e7816456f721351fa4c12cecb04cfe71076d91173b3d5b6e12109241230d8be35127f32697df037
-  languageName: node
-  linkType: hard
-
 "foc-table@workspace:.":
   version: 0.0.0-use.local
   resolution: "foc-table@workspace:."
@@ -3014,7 +3007,6 @@ __metadata:
     dotenv: "npm:^16.5.0"
     fast-glob: "npm:^3.3.3"
     fast-json-stable-stringify: "npm:^2.1.0"
-    fnv1a: "npm:^1.1.1"
     murmurhash3js: "npm:^3.0.1"
     next: "npm:15.1.8"
     next-pwa: "npm:^5.6.0"

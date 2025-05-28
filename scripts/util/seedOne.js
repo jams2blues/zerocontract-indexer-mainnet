@@ -1,6 +1,6 @@
 //File: scripts/util/seedOne.js
 import prisma                 from '../../lib/prisma.js';
-import { computeTypeHash }    from '../typeHash.js';
+import { computeTypeHash } from '../../lib/typeHash.js'
 import hashMatrix             from '../../data/hashMatrix.json'          assert { type:'json' };
 import entrypointRegistry     from '../../data/entrypointRegistry.json'  assert { type:'json' };
 import { fetchScript, fetchEntrypoints, fetchStorage } from './rpcHelpers.js';

@@ -1,33 +1,30 @@
 //File: scripts/util/rpcHelpers.js
-import fetch                from 'node-fetch';
-import { AbortController }  from 'node-abort-controller';
+import fetch from 'node-fetch';
+import { AbortController } from 'node-abort-controller';
+import { RPC_POOL } from '../../config/NetworkDivergence.js';
 
-const TIMEOUT = 8_000;
-const poolVar = n => n === 'ghostnet' ? 'GHOSTNET_RPC' : 'MAINNET_RPC';
+const TIMEOUT =
+  process.env.RPC_TIMEOUT_MS ? Number(process.env.RPC_TIMEOUT_MS) : 8_000;
 
-export async function rpc(n, path) {
-  const pool = (process.env[poolVar(n)] || '').split(/[,; ]+/).filter(Boolean);
-  if (!pool.length) throw new Error(`No RPCs set for ${n}`);
-  let last;
-  for (const base of pool) {
-    const url = base.replace(/\/+$/, '') + path;
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), TIMEOUT);
+/* internal pooled fetch with timeout + fail-over */
+async function rpcFetch (path) {
+  let lastErr;
+  for (const base of RPC_POOL) {
+    const url = `${base.replace(/\/+$/,'')}${path}`;
     try {
-      const res = await fetch(url, { signal: ctrl.signal });
-      clearTimeout(t);
-      if (!res.ok) throw new Error(String(res.status));
+      const ctl = new AbortController();
+      const to  = setTimeout(() => ctl.abort(), TIMEOUT);
+      const res = await fetch(url, { signal: ctl.signal });
+      clearTimeout(to);
+      if (!res.ok) throw new Error(`status ${res.status}`);
       return await res.json();
-    } catch (e) {
-      last = e;
-      console.error('RPC', url, '→', e.message);
-    }
+    } catch (e) { lastErr = e; }
   }
-  throw new Error(`all RPCs failed (${n}): ${last?.message}`);
+  throw lastErr ?? new Error('all RPCs unreachable');
 }
 
-export const fetchBlock      = (n, l) => rpc(n, `/chains/main/blocks/${l}`);
-export const fetchHead       =  n     => rpc(n, '/chains/main/blocks/head');
-export const fetchScript     = (n,k)  => rpc(n, `/chains/main/blocks/head/context/contracts/${k}/script`);
-export const fetchEntrypoints= (n,k)  => rpc(n, `/chains/main/blocks/head/context/contracts/${k}/entrypoints`);
-export const fetchStorage    = (n,k)  => rpc(n, `/chains/main/blocks/head/context/contracts/${k}/storage`);
+/* exported helpers (network arg kept for fwd-compat) */
+export const fetchBlock       = (_net,lvl='head')        => rpcFetch(`/chains/main/blocks/${lvl}`);
+export const fetchScript      = (_net,kt1)               => rpcFetch(`/chains/main/blocks/head/context/contracts/${kt1}/script`);
+export const fetchEntrypoints = (_net,kt1)               => rpcFetch(`/chains/main/blocks/head/context/contracts/${kt1}/entrypoints`);
+export const fetchStorage     = (_net,kt1)               => rpcFetch(`/chains/main/blocks/head/context/contracts/${kt1}/storage`);

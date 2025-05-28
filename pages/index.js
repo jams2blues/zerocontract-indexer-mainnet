@@ -1,12 +1,14 @@
-/*Developed by @jams2blues with love for the Tezos community
-  File: pages/index.js
-  Summary: client-only entry – fixed relative import paths */
+//File: pages/index.js
+import { TARGET, ACTIVE_CONFIG } from '../config/NetworkDivergence.js';
 
-import dynamic from 'next/dynamic';
-
-/* `components/` & `lib/` sit one level above `pages/` */
-const Home = dynamic(() => import('../components/HomeContent'), { ssr:false });
-
-export default Home;
-
-/* What changed & why: corrected `../components/…` path; build no longer 404s */
+/* Root route simply forwards to the peer deployment so one domain
+   always shows the opposite network for quick toggling. */
+export async function getServerSideProps () {
+  return {
+    redirect: {
+      destination: ACTIVE_CONFIG.PEER_SITE_URL,
+      permanent  : false
+    }
+  };
+}
+export default function Placeholder(){ return null; }

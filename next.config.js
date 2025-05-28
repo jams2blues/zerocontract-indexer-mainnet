@@ -1,27 +1,34 @@
-import nextPWA from 'next-pwa';
+//File: next.config.js
+/* Developed by @jams2blues with love for the Tezos community
+   Summary: canonical Next 15 config; no domain rewrites, so *localhost
+            ports always stay local*.  PWA disabled in dev.             */
+
+import nextPWA                       from 'next-pwa';
+import { ACTIVE_CONFIG }             from './config/NetworkDivergence.js';
 
 const withPWA = nextPWA({
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',  // disable PWA in dev to avoid SW cache issues
+  dest        : 'public',
+  register    : true,
+  skipWaiting : true,
+  disable     : process.env.NODE_ENV === 'development',
 });
 
-const config = {
-  reactStrictMode: true,
-  // Enable styled-components SWC transform for SSR consistent classnames
-  compiler: {
-    styledComponents: {
-      ssr: true,
-      displayName: true,
-    },
+/*───────────────────────────────────────────────────────────────*/
+const nextConfig = {
+  reactStrictMode : true,
+
+  compiler : {          // styled-components deterministic class-names
+    styledComponents : { ssr:true, displayName:true },
   },
-  env: {
-    // Expose environment variables to the client as needed
-    DATABASE_URL: process.env.DATABASE_URL,
+
+  /* Client-side env only when truly required */
+  env : {
+    ZU_TARGET   : process.env.TARGET ?? 'mainnet',
+    MAINNET_RPC : process.env.MAINNET_RPC,
     GHOSTNET_RPC: process.env.GHOSTNET_RPC,
-    MAINNET_RPC: process.env.MAINNET_RPC,
   },
+
+  // **NO** redirects / rewrites here: localhost ports => stay put
 };
 
-export default withPWA(config);
+export default withPWA(nextConfig);
