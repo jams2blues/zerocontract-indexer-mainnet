@@ -1,30 +1,70 @@
-//File: scripts/util/rpcHelpers.js
-import fetch from 'node-fetch';
-import { AbortController } from 'node-abort-controller';
-import { RPC_POOL } from '../../config/NetworkDivergence.js';
+const fetch = require('node-fetch');  // Make sure to have node-fetch installed for NodeJS v14/16. In Node v18+, fetch is built-in.
+const { RPC_POOL } = require('../../config/NetworkDivergence');
 
-const TIMEOUT =
-  process.env.RPC_TIMEOUT_MS ? Number(process.env.RPC_TIMEOUT_MS) : 8_000;
+let rpcIndex = 0;
 
-/* internal pooled fetch with timeout + fail-over */
-async function rpcFetch (path) {
-  let lastErr;
-  for (const base of RPC_POOL) {
-    const url = `${base.replace(/\/+$/,'')}${path}`;
-    try {
-      const ctl = new AbortController();
-      const to  = setTimeout(() => ctl.abort(), TIMEOUT);
-      const res = await fetch(url, { signal: ctl.signal });
-      clearTimeout(to);
-      if (!res.ok) throw new Error(`status ${res.status}`);
-      return await res.json();
-    } catch (e) { lastErr = e; }
+/**
+ * Fetch JSON data from one of the RPC nodes in the pool.
+ * Rotates through RPC_POOL for load balancing. If a node fails, tries the next.
+ */
+async function fetchFromPool(path) {
+  const totalNodes = RPC_POOL.length;
+  if (totalNodes === 0) {
+    throw new Error('RPC_POOL is empty. No RPC endpoints available.');
   }
-  throw lastErr ?? new Error('all RPCs unreachable');
+  // Start with current rpcIndex and try each node in sequence
+  for (let i = 0; i < totalNodes; i++) {
+    const idx = (rpcIndex + i) % totalNodes;
+    const baseUrl = RPC_POOL[idx];
+    const url = baseUrl.replace(/\/+$/,'') + path;  // ensure no double slash
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      // Update global index for next call (round-robin)
+      rpcIndex = (idx + 1) % totalNodes;
+      return data;
+    } catch (err) {
+      console.warn(`RPC request failed on ${RPC_POOL[idx]}${path}: ${err.message}`);
+      // on last iteration, rethrow error
+      if (i === totalNodes - 1) {
+        throw new Error(`All RPC nodes failed for ${path}`);
+      }
+      // otherwise, try next node (continue loop)
+    }
+  }
 }
 
-/* exported helpers (network arg kept for fwd-compat) */
-export const fetchBlock       = (_net,lvl='head')        => rpcFetch(`/chains/main/blocks/${lvl}`);
-export const fetchScript      = (_net,kt1)               => rpcFetch(`/chains/main/blocks/head/context/contracts/${kt1}/script`);
-export const fetchEntrypoints = (_net,kt1)               => rpcFetch(`/chains/main/blocks/head/context/contracts/${kt1}/entrypoints`);
-export const fetchStorage     = (_net,kt1)               => rpcFetch(`/chains/main/blocks/head/context/contracts/${kt1}/storage`);
+/** Get the operations for a given block level (returns an array of operations groups). */
+async function getBlockOperations(blockLevel) {
+  const path = `/chains/main/blocks/${blockLevel}/operations`;
+  return fetchFromPool(path);
+}
+
+/** Get the current head block level of the chain. */
+async function getHeadLevel() {
+  const path = `/chains/main/blocks/head/header`;
+  const header = await fetchFromPool(path);
+  return header.level;
+}
+
+/** Get the full script (code and initial storage) of a contract at head. */
+async function getContractScript(contractAddress) {
+  const path = `/chains/main/blocks/head/context/contracts/${contractAddress}/script`;
+  return fetchFromPool(path);
+}
+
+/** Get the current storage value of a contract at head. */
+async function getContractStorage(contractAddress) {
+  const path = `/chains/main/blocks/head/context/contracts/${contractAddress}/storage`;
+  return fetchFromPool(path);
+}
+
+module.exports = {
+  getBlockOperations,
+  getHeadLevel,
+  getContractScript,
+  getContractStorage
+};
