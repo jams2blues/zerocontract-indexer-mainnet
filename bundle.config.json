@@ -24,7 +24,7 @@
       "bundleName": "prisma-public-bundle",
       "patterns": [
         "prisma/**/*",
-        "public/**/*"
+        "public/sw.js"
       ]
     },
 

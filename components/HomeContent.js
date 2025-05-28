@@ -1,8 +1,8 @@
 //File: components/HomeContent.js
 /* Developed by @jams2blues with love for the Tezos community
-   Summary: Home UI — network switch now honours dev vs prod.
+   Summary: Home UI — network switch honors dev vs prod.
             In dev it toggles the ?network query on the same host.
-            In prod it jumps to the PEER_SITE_URL.                     */
+            In prod it jumps to the peer site domain.                     */
 
 import { useState, useEffect, useMemo } from 'react';
 import useSWR          from 'swr';
@@ -13,7 +13,7 @@ import { ACTIVE_CONFIG, TARGET } from '../config/NetworkDivergence.js';
 
 const fetcher = (u) => fetch(u).then(r => r.json());
 
-/*── styled ───────────────────────────────────────────*/
+/*── styled components ───────────────────────────*/
 const Layout   = styled.main`max-width:1080px;margin:0 auto;padding:1rem;`;
 const Console  = styled.pre`
   background:#111;color:#0f0;padding:1rem;font-size:.8rem;
@@ -30,8 +30,8 @@ const Card     = styled.a`
   &:hover{box-shadow:0 0 0 4px var(--zu-accent);}
 `;
 
-/*── component ───────────────────────────────────────*/
-export default function HomeContent () {
+/*── component ───────────────────────────────────*/
+export default function HomeContent() {
   const { query, push } = useRouter();
   const network = query.network === 'ghostnet' ? 'ghostnet' : 'mainnet';
 
@@ -43,8 +43,9 @@ export default function HomeContent () {
   const { data, error, isLoading, mutate } = useSWR(api, fetcher);
   const { data: apiList } = useSWR(showApi ? '/api/endpoints' : null, fetcher);
 
-  useEffect(() => { if (!isLoading) setStamp(new Date().toLocaleTimeString()); },
-            [isLoading]);
+  useEffect(() => {
+    if (!isLoading) setStamp(new Date().toLocaleTimeString());
+  }, [isLoading]);
 
   const status = useMemo(() => [
     `status: ${isLoading ? 'loading…' : error ? 'error' : 'ok'}`,
@@ -53,59 +54,50 @@ export default function HomeContent () {
     `last refresh: ${stamp}`,
   ].join('\n'), [isLoading, error, network, data, stamp]);
 
-  /*--------- helpers ---------*/
+  /*--------- network toggle handler ---------*/
   const switchNetwork = () => {
-    const target = network === 'mainnet' ? 'ghostnet' : 'mainnet';
-
+    const targetNet = network === 'mainnet' ? 'ghostnet' : 'mainnet';
     if (process.env.NODE_ENV === 'development') {
       // stay on localhost – just flip the query param
-      push({ pathname:'/', query:{ network: target } });
+      push({ pathname:'/', query:{ network: targetNet } });
     } else {
-      // production: jump to the peer site
-      window.location.href =
-        target === 'mainnet'
-          ? ACTIVE_CONFIG.PEER_SITE_URL   // ghost → main
-          : ACTIVE_CONFIG.PEER_SITE_URL;   // main → ghost
+      // production: jump to the peer network's site
+      window.location.href = ACTIVE_CONFIG.PEER_SITE_URL;
     }
   };
 
-  /*───────── render ─────────*/
   return (
     <Layout>
-      <h1>FOC Contract Table</h1>
-      <Console>{status}</Console>
-
       <Controls>
-        <button onClick={() => mutate()}>🔄 Refresh</button>
-        <button onClick={switchNetwork}>
-          🌐 Switch to {network === 'mainnet' ? 'ghostnet' : 'mainnet'}
+        <button onClick={() => mutate()} style={{ marginRight: 'auto' }}>
+          ↻ Refresh
         </button>
-        <button onClick={() => setShowApi(!showApi)}>📜 APIs</button>
-        <input
-          placeholder="Filter by KT1 / tz1 / collaborator…"
-          value={owner}
-          onChange={e => setOwner(e.target.value.trim())}
-          style={{ flex:'1 1 260px' }}
-        />
+        <button onClick={() => setShowApi(!showApi)}>
+          {showApi ? 'Hide' : 'Show'} API routes
+        </button>
+        <button onClick={switchNetwork}>
+          🌐 Switch to {network === 'mainnet' ? 'Ghostnet' : 'Mainnet'}
+        </button>
       </Controls>
 
-      {showApi && apiList && (
-        <Console style={{marginTop:'1rem'}}>{apiList.endpoints.join('\n')}</Console>
-      )}
-
-      {data && (
-        <Grid>
-          {data.map(c => (
-            <Link key={c.kt1} href={`/kt1/${c.kt1}`} legacyBehavior>
+      <Console>{status}</Console>
+      { showApi && apiList &&
+        <Console style={{ maxHeight:'240px', overflow:'auto' }}>
+          {apiList.endpoints.join('\n')}
+        </Console>
+      }
+      <Grid>
+        { data && data.map(col => (
+            <Link href={'/kt1/' + col.kt1} key={col.kt1} legacyBehavior>
               <Card>
-                <strong>{c.metadata?.name || 'Unnamed'}</strong><br/>
-                <small>{c.kt1}</small><br/>
-                <small>{c.version} · {c.tokenCount} token{c.tokenCount!==1&&'s'}</small>
+                <h3>{col.name || '(untitled)'}</h3>
+                <p>{col.tokens?.length || 0} tokens<br/>
+                   <small>{col.kt1}</small></p>
               </Card>
             </Link>
-          ))}
-        </Grid>
-      )}
+        ))}
+        { error && <p>Error loading collections.</p> }
+      </Grid>
     </Layout>
   );
 }
